@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jornada do Reparo Externo — CBA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#1B33E0;
+    --navy:#0A0F5E;
+    --purple:#3D1478;
+    --cyan:#3FC7DE;
+    --bg:#F3F5FC;
+    --card:#FFFFFF;
+    --text:#12142B;
+    --muted:#5B5F7A;
+    --line:#E3E6F5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:36px 28px 60px;}
+
+  /* Header */
+  .hero{
+    position:relative;
+    border-radius:20px;
+    padding:36px 40px;
+    margin-bottom:28px;
+    overflow:hidden;
+    background:linear-gradient(120deg,var(--navy) 0%, var(--blue) 46%, var(--purple) 100%);
+    color:#fff;
+  }
+  .hero::after{
+    content:"";
+    position:absolute; right:-60px; top:-80px;
+    width:280px;height:280px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(63,199,222,.35), transparent 70%);
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    color:#BFE9F2; margin-bottom:10px; position:relative;
+  }
+  .hero h1{
+    font-family:'Sora',sans-serif; font-weight:700; font-size:30px;
+    margin:0 0 8px; position:relative; max-width:640px; line-height:1.25;
+  }
+  .hero p{margin:0; color:#D9DEFA; font-size:15px; max-width:560px; position:relative;}
+
+  /* KPI row */
+  .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:32px;}
+  .kpi{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px;
+  }
+  .kpi .label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; font-family:'IBM Plex Mono',monospace;}
+  .kpi .value{font-family:'Sora',sans-serif; font-weight:700; font-size:20px; margin-top:4px; color:var(--navy);}
+
+  /* Role legend / filter */
+  .roles{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:26px;}
+  .role-btn{
+    display:flex; align-items:center; gap:8px;
+    background:var(--card); border:1px solid var(--line); border-radius:999px;
+    padding:8px 16px; font-size:13px; font-weight:500; color:var(--text);
+    cursor:pointer; transition:all .2s ease;
+  }
+  .role-btn .dot{width:9px;height:9px;border-radius:50%;}
+  .role-btn.active{border-color:transparent; color:#fff;}
+  .role-btn[data-role="area"] .dot{background:var(--blue);}
+  .role-btn[data-role="administrativo"] .dot{background:var(--purple);}
+  .role-btn[data-role="fornecedor"] .dot{background:var(--navy);}
+  .role-btn[data-role="area"].active{background:var(--blue);}
+  .role-btn[data-role="administrativo"].active{background:var(--purple);}
+  .role-btn[data-role="fornecedor"].active{background:var(--navy);}
+
+  /* Stepper */
+  .stepper-shell{position:relative; margin-bottom:8px;}
+  .stepper{
+    display:flex; justify-content:space-between; position:relative;
+    padding:0 4px;
+  }
+  .rail{
+    position:absolute; top:19px; left:24px; right:24px; height:3px;
+    background:var(--line); border-radius:2px; z-index:0;
+  }
+  .rail-fill{
+    position:absolute; top:19px; left:24px; height:3px;
+    background:linear-gradient(90deg,var(--blue),var(--purple));
+    border-radius:2px; z-index:1; transition:width .35s ease;
+  }
+  .step{
+    position:relative; z-index:2; display:flex; flex-direction:column; align-items:center;
+    gap:8px; cursor:pointer; flex:1; padding:0 2px; background:none; border:none;
+    font-family:inherit;
+  }
+  .node{
+    width:40px;height:40px;border-radius:50%;
+    background:#fff; border:2.5px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:var(--muted);
+    transition:all .25s ease;
+  }
+  .step.active .node{
+    border-color:var(--blue); color:#fff;
+    background:linear-gradient(135deg,var(--blue),var(--purple));
+    transform:scale(1.08);
+    box-shadow:0 6px 16px rgba(27,51,224,.28);
+  }
+  .step.decision .node{border-style:dashed;}
+  .step .label{
+    font-size:11px; text-align:center; color:var(--muted); max-width:82px; line-height:1.25;
+    font-weight:500;
+  }
+  .step.active .label{color:var(--navy); font-weight:700;}
+  .step.dimmed{opacity:.3;}
+
+  /* Panel */
+  .panel{
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:32px 36px; margin-top:34px; min-height:220px;
+    animation:fadeIn .3s ease;
+  }
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  .panel-top{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap;}
+  .panel-title{font-family:'Sora',sans-serif; font-weight:700; font-size:22px; color:var(--navy); margin:0 0 8px;}
+  .panel-desc{color:var(--text); font-size:15px; line-height:1.6; max-width:640px; margin:0;}
+  .badge-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .badge{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:6px 12px;
+    border-radius:8px; font-weight:500; white-space:nowrap;
+  }
+  .badge.role{color:#fff;}
+  .badge.sla{background:#FDECEA; color:#9A3412;}
+  .badge.ok{background:#E7F6EC; color:#166534;}
+
+  .sla-select{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:500;
+    padding:6px 10px; border-radius:8px; border:1.5px solid #F3B79A; background:#FDECEA;
+    color:#9A3412; cursor:pointer;
+  }
+
+  /* Decision toggle */
+  .decision-box{margin-top:22px; border-top:1px dashed var(--line); padding-top:20px;}
+  .toggle{display:inline-flex; background:var(--bg); border-radius:10px; padding:4px; margin-bottom:16px;}
+  .toggle button{
+    border:none; background:none; padding:9px 20px; border-radius:8px; cursor:pointer;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; color:var(--muted);
+    transition:all .2s ease;
+  }
+  .toggle button.active{background:var(--navy); color:#fff;}
+  .outcome{
+    background:var(--bg); border-radius:12px; padding:18px 20px; font-size:14.5px;
+    line-height:1.6; color:var(--text); animation:fadeIn .25s ease;
+  }
+  .outcome strong{color:var(--navy);}
+
+  .nav-btns{display:flex; justify-content:space-between; margin-top:26px;}
+  .nav-btns button{
+    border:none; background:var(--navy); color:#fff; padding:11px 22px; border-radius:10px;
+    font-weight:600; font-size:13.5px; cursor:pointer; font-family:'Inter',sans-serif;
+    transition:opacity .2s ease;
+  }
+  .nav-btns button:disabled{opacity:.35; cursor:default;}
+  .nav-btns button:not(:disabled):hover{opacity:.88;}
+
+  footer{text-align:center; color:var(--muted); font-size:12px; margin-top:30px;}
+
+  @media (max-width:820px){
+    .stepper{overflow-x:auto; gap:2px;}
+    .step .label{max-width:60px; font-size:10px;}
+    .kpis{grid-template-columns:1fr;}
+    .hero h1{font-size:24px;}
+    .panel{padding:24px 20px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">CBA · Serviços de Reparo Externo</div>
+    <h1>Jornada do reparo externo de equipamentos</h1>
+    <p>Do defeito identificado ao fechamento do ciclo — clique em qualquer etapa da linha do tempo para ver os detalhes, os responsáveis e as decisões envolvidas.</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="label">SLA · Emissão de NF</div><div class="value" id="kpiSla">3 dias (padrão)</div></div>
+    <div class="kpi"><div class="label">Alerta · Equipamento no fornecedor</div><div class="value">30 dias</div></div>
+    <div class="kpi"><div class="label">Etapas com responsável reatribuível</div><div class="value">2 de 9</div></div>
+  </div>
+
+  <div class="roles" id="roles">
+    <div class="role-btn" data-role="area"><span class="dot"></span>Área Solicitante</div>
+    <div class="role-btn" data-role="administrativo"><span class="dot"></span>Administrativo</div>
+    <div class="role-btn" data-role="fornecedor"><span class="dot"></span>Fornecedor</div>
+  </div>
+
+  <div class="stepper-shell">
+    <div class="rail"></div>
+    <div class="rail-fill" id="railFill"></div>
+    <div class="stepper" id="stepper"></div>
+  </div>
+
+  <div class="panel" id="panel"></div>
+
+  <div class="nav-btns">
+    <button id="prevBtn">← Etapa anterior</button>
+    <button id="nextBtn">Próxima etapa →</button>
+  </div>
+
+  <footer>Fluxo de referência para o processo de reparo externo · CBA</footer>
+</div>
+
+<script>
+const SLA_OPTIONS = [
+  { value: "1", label: "1 dia (urgência)" },
+  { value: "3", label: "3 dias (padrão)" },
+  { value: "5", label: "5 dias (grande porte)" }
+];
+
+const STEPS = [
+  {
+    key: "defeito", label: "Defeito identificado", role: "area",
+    title: "Defeito identificado",
+    desc: "A área solicitante identifica a falha no equipamento em campo e registra a causa raiz, junto com os dados do item na planilha padrão da CBA.",
+    badges: [{type:"role", text:"Área Solicitante"}]
+  },
+  {
+    key: "nf", label: "Solicitação de NF", role: "administrativo",
+    title: "Solicitação de emissão de NF",
+    desc: "A planilha preenchida é encaminhada ao administrativo, responsável por solicitar a emissão da nota fiscal de remessa para conserto.",
+    badges: [{type:"role", text:"Administrativo"}, {type:"sla-select"}]
+  },
+  {
+    key: "envio", label: "Envio ao fornecedor", role: "area",
+    title: "Envio para o fornecedor",
+    desc: "Com a NF emitida, a área solicitante providencia o envio do equipamento ao fornecedor. O estado do equipamento é registrado com checklist e fotos antes da saída, para eliminar disputas futuras sobre avarias.",
+    badges: [{type:"role", text:"Área Solicitante"}]
+  },
+  {
+    key: "orcamento", label: "Orçamento recebido", role: "fornecedor",
+    title: "Orçamento recebido",
+    desc: "O fornecedor avalia o equipamento e envia o orçamento do reparo. Ele não tem contato com cotações de outros fornecedores — apenas avalia e orça o próprio serviço.",
+    badges: [{type:"role", text:"Fornecedor"}]
+  },
+  {
+    key: "alcada", label: "Aprovação de alçada", role: "area", decision: true,
+    title: "Decisão · dentro da alçada?",
+    desc: "A área solicitante avalia o orçamento recebido e confere o valor contra o limite de alçada definido para aprovação automática.",
+    badges: [{type:"role", text:"Área Solicitante"}],
+    toggle: ["Dentro da alçada", "Acima da alçada"],
+    outcomes: [
+      "O orçamento é <strong>aprovado e registrado</strong> diretamente pela área solicitante, com aprovador, valor e data.",
+      "O caso <strong>sobe para aprovação superior</strong> — gestor ou diretoria decide antes de seguir."
+    ]
+  },
+  {
+    key: "fornecedorFinal", label: "Fornecedor mantido ou trocado", role: "area", decision: true,
+    title: "Decisão · orçamento aprovado?",
+    desc: "Com a decisão final registrada, a área solicitante define se o orçamento é aprovado ou reprovado, e o processo segue por um de dois caminhos.",
+    badges: [{type:"role", text:"Área Solicitante"}],
+    toggle: ["Aprovado", "Reprovado"],
+    outcomes: [
+      "O <strong>reparo é autorizado</strong> no fornecedor atual, após verificar saldo orçamentário disponível.",
+      "Abre-se uma <strong>nova cotação mínima</strong> com fornecedor homologado. O registro anterior é mantido como <strong>cancelado/transferido</strong> — nunca excluído — e a contagem de dias reinicia no novo ciclo."
+    ]
+  },
+  {
+    key: "acompanhamento", label: "Acompanhamento no fornecedor", role: "area", decision: true,
+    title: "Decisão · atualizado dentro do prazo?",
+    desc: "Enquanto o equipamento está no fornecedor, o processo verifica se houve atualização de status dentro do prazo esperado.",
+    badges: [{type:"role", text:"Área Solicitante"}, {type:"sla", text:"Alerta em 30 dias"}],
+    toggle: ["Dentro do prazo", "Sem atualização"],
+    outcomes: [
+      "O acompanhamento <strong>segue com a área solicitante</strong>, sem mudança de responsável.",
+      "O sistema <strong>reatribui automaticamente</strong> o acompanhamento ao administrativo, garantindo continuidade mesmo sem uma atualização manual — o processo não depende de uma única pessoa lembrar de agir."
+    ]
+  },
+  {
+    key: "retorno", label: "Retorno emitido", role: "fornecedor",
+    title: "Retorno emitido pelo fornecedor",
+    desc: "O fornecedor devolve o equipamento reparado, acompanhado da nota de retorno para a CBA.",
+    badges: [{type:"role", text:"Fornecedor"}]
+  },
+  {
+    key: "fechamento", label: "Fechamento do ciclo", role: "area",
+    title: "Fechamento do ciclo",
+    desc: "A área solicitante confere o equipamento recebido e repassa ao administrativo, que dá entrada na nota de retorno, fechando o ciclo com histórico completo e auditável.",
+    badges: [{type:"role", text:"Área Solicitante"}, {type:"role2", text:"Administrativo"}, {type:"ok", text:"Ciclo auditável"}]
+  }
+];
+
+const ROLE_COLOR = {
+  area: "var(--blue)",
+  administrativo: "var(--purple)",
+  fornecedor: "var(--navy)"
+};
+
+let current = 0;
+let activeRole = null;
+let toggleState = {}; // key -> 0 or 1
+let slaChoice = "3";
+
+const stepperEl = document.getElementById('stepper');
+const panelEl = document.getElementById('panel');
+const railFill = document.getElementById('railFill');
+const rolesEl = document.getElementById('roles');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const kpiSla = document.getElementById('kpiSla');
+
+function renderStepper(){
+  stepperEl.innerHTML = '';
+  STEPS.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'step' + (i === current ? ' active' : '') + (s.decision ? ' decision' : '') +
+      (activeRole && s.role !== activeRole ? ' dimmed' : '');
+    btn.innerHTML = `<div class="node">${i+1}</div><div class="label">${s.label}</div>`;
+    btn.addEventListener('click', () => { current = i; render(); });
+    stepperEl.appendChild(btn);
+  });
+  const pct = STEPS.length > 1 ? (current / (STEPS.length - 1)) * 100 : 0;
+  railFill.style.width = pct + '%';
+}
+
+function renderPanel(){
+  const s = STEPS[current];
+  let badgesHtml = s.badges.map(b => {
+    if (b.type === 'role') {
+      return `<span class="badge role" style="background:${ROLE_COLOR[s.role]}">${b.text}</span>`;
+    }
+    if (b.type === 'role2') {
+      return `<span class="badge role" style="background:${ROLE_COLOR['administrativo']}">${b.text}</span>`;
+    }
+    if (b.type === 'sla-select') {
+      const opts = SLA_OPTIONS.map(o => `<option value="${o.value}" ${o.value===slaChoice?'selected':''}>${o.label}</option>`).join('');
+      return `<select class="sla-select" id="slaSelect">${opts}</select>`;
+    }
+    return `<span class="badge ${b.type}">${b.text}</span>`;
+  }).join('');
+
+  let decisionHtml = '';
+  if (s.decision) {
+    const state = toggleState[s.key] ?? 0;
+    decisionHtml = `
+      <div class="decision-box">
+        <div class="toggle">
+          <button data-idx="0" class="${state===0?'active':''}">${s.toggle[0]}</button>
+          <button data-idx="1" class="${state===1?'active':''}">${s.toggle[1]}</button>
+        </div>
+        <div class="outcome">${s.outcomes[state]}</div>
+      </div>
+    `;
+  }
+
+  panelEl.innerHTML = `
+    <div class="panel-top">
+      <div>
+        <h2 class="panel-title">${s.title}</h2>
+        <p class="panel-desc">${s.desc}</p>
+      </div>
+      <div class="badge-row">${badgesHtml}</div>
+    </div>
+    ${decisionHtml}
+  `;
+
+  if (s.decision) {
+    panelEl.querySelectorAll('.toggle button').forEach(b => {
+      b.addEventListener('click', () => {
+        toggleState[s.key] = parseInt(b.dataset.idx, 10);
+        renderPanel();
+      });
+    });
+  }
+
+  const slaSelect = document.getElementById('slaSelect');
+  if (slaSelect) {
+    slaSelect.addEventListener('change', (e) => {
+      slaChoice = e.target.value;
+      const opt = SLA_OPTIONS.find(o => o.value === slaChoice);
+      kpiSla.textContent = opt.label;
+    });
+  }
+}
+
+function renderNav(){
+  prevBtn.disabled = current === 0;
+  nextBtn.disabled = current === STEPS.length - 1;
+}
+
+function render(){
+  renderStepper();
+  renderPanel();
+  renderNav();
+}
+
+prevBtn.addEventListener('click', () => { if (current > 0) { current--; render(); } });
+nextBtn.addEventListener('click', () => { if (current < STEPS.length - 1) { current++; render(); } });
+
+rolesEl.querySelectorAll('.role-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const r = btn.dataset.role;
+    activeRole = activeRole === r ? null : r;
+    rolesEl.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === activeRole));
+    renderStepper();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
